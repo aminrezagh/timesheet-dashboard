@@ -1,6 +1,7 @@
 # Timesheet Dashboard
 
-The Timesheet Dashboard is a web-based application that provides a detailed view of the total man-hours spent on different activities involved in document preparation, review, meetings, etc., categorized based on each personnel, project, and activity. It allows tracking employee performance and responsiveness by providing key performance metrics.
+The Timesheet Dashboard is a web-based application that provides a detailed view of the total man-hours spent on different activities involved in engineering document preparation, review, technical meetings, etc. categorized based on each personnel, project, and activity. 
+It allows tracking employee performance and responsiveness by providing key performance metrics.
 
 ## Usage
 
