@@ -87,6 +87,7 @@ def date_range(base_date):
 
     return dates
 
+@st.cache
 def connect_to_db(db_con, base_date):
 
     data = []
