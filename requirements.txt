@@ -1,3 +1,7 @@
-pandas==1.4.2
-pytimeparse==1.0.0
-distinctipy==0.1.0
+colour==0.1.5
+distinctipy==1.2.2
+numpy==1.23.5
+pandas==1.5.3
+plotly==5.10.0
+pytimeparse==1.1.8
+streamlit==1.12.2
