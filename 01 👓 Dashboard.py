@@ -42,58 +42,12 @@ new_names = [
     "activity_id",
     "discipline",
     "discipline_code",
+    "date",
     "basic",
     "over_time",
     "mission",
     "homework",
 ]
-
-
-def date_range(base_date):
-    month = int(base_date[2:4])
-    as_strided = np.lib.stride_tricks.as_strided
-    iter_range = np.roll(
-        as_strided(np.arange(12, 0, -1), (12, 2), np.arange(12, 0, -1).strides * 2),
-        [month, month],
-    )
-    dates = []
-
-    for m in iter_range:
-        if iter_range[0, 0] >= m[0] > 1:
-            start_date = "01" + "%02d" % m[1] + base_date[-4:]
-            end_date = "01" + "%02d" % m[0] + base_date[-4:]
-            dates.append([end_date, start_date])
-
-        elif (m[0] == 1) and (m[1] == 12):
-            start_date = "01" + "%02d" % m[1] + str(int(base_date[-4:]) - 1)
-            end_date = "01" + "%02d" % m[0] + base_date[-4:]
-            dates.append([end_date, start_date])
-
-        else:
-            start_date = "01" + "%02d" % m[1] + str(int(base_date[-4:]) - 1)
-            end_date = "01" + "%02d" % m[0] + str(int(base_date[-4:]) - 1)
-            dates.append([end_date, start_date])
-
-    return dates
-
-
-def connect_to_db(db_con, base_date):
-    data = []
-    date_ranges = date_range(base_date)
-
-    for i in range(12):
-        try:
-            col_name = date_ranges[0][1][4:] + " - " + date_ranges[0][1][2:4]
-            df = pd.read_sql(
-                f"EXEC TimeSheet @startDate = '{date_ranges[i][1]}', @endDate = '{date_ranges[i][0]}'",
-                db_con,
-            ).assign(date=col_name)
-            data = data + [df]
-        except:
-            pass
-
-    return pd.concat(data, ignore_index=True)
-
 
 # extracts package section personnel ids from a text file
 pckg_pers_id = [
