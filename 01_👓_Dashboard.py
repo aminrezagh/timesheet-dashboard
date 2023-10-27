@@ -15,7 +15,7 @@ hide_streamlit_logo = """
 st.markdown(hide_streamlit_logo, unsafe_allow_html=True)
 
 # defines default columns names for database
-default_names = [
+DEFAULT_NAMES = [
     "Cost Center's Name",
     "Cost Center's Code",
     "Last Name",
@@ -32,7 +32,7 @@ default_names = [
     "Homework",
 ]
 
-new_names = [
+NEW_NAMES = [
     "cost_center",
     "cost_center_id",
     "last_name",
@@ -50,29 +50,45 @@ new_names = [
 ]
 
 # extracts package section personnel ids from a text file
-pckg_pers_id = [
+PCKG_PERS_ID = [
     str(i) for i in sum(pd.read_csv("package_personnel_ids.txt").values.tolist(), [])
 ]
+
+TIME_COLS = ["basic", "over_time", "mission", "homework"]
+
+ACTIVITY_TYPES = {
+    "EVD": "VDR",
+    "clarification": "TCL",
+    "data sheet": "DSH",
+    "datasheet": "DSH",
+    "requisition": "MRQ",
+    "TBE": "TBE",
+    "service": "ITC",
+    "POR": "POR",
+    "coordination": "CRD",
+    "meeting": "MTG",
+    "mission": "MSN",
+    "contract": "CRW",
+    "off": "OFF",
+}
 
 
 def clean_and_categorize(df: pd.DataFrame):
     # renames the columns
-    df.rename(columns=dict(zip(default_names, new_names)), inplace=True)
-    df = df[df["pers_id"].isin(pckg_pers_id)]
+    df.rename(columns=dict(zip(DEFAULT_NAMES, NEW_NAMES)), inplace=True)
+    df = df[df["pers_id"].isin(PCKG_PERS_ID)]
     df.drop("pers_id", axis=1, inplace=True)
 
     # converts time-format to number of hours
-    time_cols = ["basic", "over_time", "mission", "homework"]
-    df[time_cols] = df[time_cols].applymap(
+    df[TIME_COLS] = df[TIME_COLS].applymap(
         lambda t: timeparse(t, granularity="minutes") / 3600
     )
     df.drop(["discipline", "discipline_code"], axis=1, inplace=True)
 
     # adds thursday column to dataframe
-    df.loc[df["basic"] == 0, "thursday"] = df["over_time"]
-    df["thursday"].fillna(0, inplace=True)
-    df.loc[df["cost_center_id"] == "OFF", "off_time"] = df["basic"]
-    df["off_time"].fillna(0, inplace=True)
+    add_thursday_column(df)
+    add_off_time_column(df)
+
     df["pers_name"] = (
         df["last_name"].str.split().str.get(0).str.title()
         + ", "
@@ -81,40 +97,8 @@ def clean_and_categorize(df: pd.DataFrame):
     df.drop(["first_name", "last_name"], axis=1, inplace=True)
 
     # defines categories for different types of activies
-    df.loc[df["activity_id"].str.contains("EVD", case=True), "activity_type"] = "VDR"
-    df.loc[
-        df["activity_name"].str.contains("clarification", case=False), "activity_type"
-    ] = "TCL"
-    df.loc[
-        df["activity_name"].str.contains("data sheet", case=False), "activity_type"
-    ] = "DSH"
-    df.loc[
-        df["activity_name"].str.contains("datasheet", case=False), "activity_type"
-    ] = "DSH"
-    df.loc[
-        df["activity_name"].str.contains("requisition", case=False), "activity_type"
-    ] = "MRQ"
-    df.loc[df["activity_name"].str.contains("TBE", case=True), "activity_type"] = "TBE"
-    df.loc[
-        df["activity_name"].str.contains("service", case=False), "activity_type"
-    ] = "ITC"
-    df.loc[df["activity_name"].str.contains("POR", case=True), "activity_type"] = "POR"
-    df.loc[
-        df["activity_name"].str.contains("coordination", case=False), "activity_type"
-    ] = "CRD"
-    df.loc[
-        df["activity_name"].str.contains("meeting", case=False), "activity_type"
-    ] = "MTG"
-    df.loc[
-        df["activity_name"].str.contains("mission", case=False), "activity_type"
-    ] = "MSN"
-    df.loc[
-        df["activity_name"].str.contains("contract", case=False), "activity_type"
-    ] = "CRW"
-    df.loc[
-        df["cost_center_id"].str.contains("off", case=False), "activity_type"
-    ] = "OFF"
-    df["activity_type"].fillna("OTH", inplace=True)
+    categorize_activity(df)
+
     df["month"] = df["date"].astype(str).str[4:6]
     df["year"] = df["date"].astype(str).str[0:4]
     df.drop("date", axis=1, inplace=True)
@@ -123,23 +107,25 @@ def clean_and_categorize(df: pd.DataFrame):
     df["total"] = df["total_basic"] + df["over_time"]
     df["net_working"] = df["total_basic"] - df["off_time"] + df["over_time"]
 
-    st.session_state["acts"] = [
-        "DSH",
-        "ITC",
-        "MRQ",
-        "TCL",
-        "TBE",
-        "POR",
-        "VDR",
-        "MTG",
-        "CRD",
-        "MSN",
-        "OFF",
-        "CRW",
-        "OTH",
-    ]
-
     return df
+
+
+def add_thursday_column(df):
+    df.loc[df["basic"] == 0, "thursday"] = df["over_time"]
+    df["thursday"].fillna(0, inplace=True)
+
+
+def add_off_time_column(df):
+    df.loc[df["cost_center_id"] == "OFF", "off_time"] = df["basic"]
+    df["off_time"].fillna(0, inplace=True)
+
+
+def categorize_activity(df):
+    for activity, activity_type in ACTIVITY_TYPES.items():
+        df.loc[
+            df["activity_name"].str.contains(activity, case=False), "activity_type"
+        ] = activity_type
+    df["activity_type"].fillna("OTH", inplace=True)
 
 
 def set_ss():
