@@ -55,7 +55,6 @@ pckg_pers_id = [
 ]
 
 
-@st.cache
 def clean_and_categorize(df: pd.DataFrame):
     # renames the columns
     df.rename(columns=dict(zip(default_names, new_names)), inplace=True)
