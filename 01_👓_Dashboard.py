@@ -161,7 +161,7 @@ if "dataframe" in st.session_state:
     df = st.session_state["dataframe"]
 
 else:
-    df = pd.read_csv("./db/demo_db.csv")
+    df = pd.read_csv("./db/demo_db.csv", dtype=str)
     df = clean_and_categorize(df)
     st.session_state["dataframe"] = df
 
