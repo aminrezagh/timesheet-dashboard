@@ -1,0 +1,3 @@
+pandas==1.4.2
+pytimeparse==1.0.0
+distinctipy==0.1.0
