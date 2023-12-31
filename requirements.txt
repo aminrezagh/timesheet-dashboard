@@ -1,8 +1,4 @@
-colour
-distinctipy
-numpy
-pandas
-plotly
-pytimeparse
-streamlit
-matplotlib
+distinctipy==1.2.2
+pandas==1.5.3
+pytimeparse==1.1.8
+streamlit==1.29.0
