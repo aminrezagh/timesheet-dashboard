@@ -1,6 +1,6 @@
 import streamlit as st
 
-st.set_page_config(page_icon="📊,,,,,,,,",layout="wide", page_title="Package Man-Hour")
+st.set_page_config(page_icon="📊,,,,,,,," ,layout="wide", page_title="Package Man-Hour")
 
 PAGE_STYLE = """
             <style>
@@ -103,8 +103,10 @@ for i, v in enumerate([v1, v2]):
     with v:
         try:
             for n in range(height):
+                person_name = pers_list[width * n + i]
+
                 df_filtered = df[
-                    df["pers_name"].isin([pers_list[width * n + i]])
+                    df["pers_name"].isin([person_name])
                     & ~df["date"].isin(st.session_state["ss_month_range"])
                     & ~df["activity_type"].isin(st.session_state["ss_act_range"])
                     & ~df["cost_center"].isin(st.session_state["ss_prj_range"])
@@ -133,58 +135,6 @@ for i, v in enumerate([v1, v2]):
                 )
 
                 st.vega_lite_chart(
-                    df_grouped_bar,
-                    {
-                        "width": "container",
-                        "height": {"step": 25},
-                        "title": {
-                            "text": pers_list[width * n + i],
-                            "offset": 15,
-                            "fontSize": "16",
-                            "anchor": "start",
-                        },
-                        "mark": {
-                            "type": "bar",
-                            "stroke": "#fff",
-                            "tooltip": {
-                                "signal": "{'Total (h)': round(datum.total), 'Project': datum.cost_center}"
-                            },
-                        },
-                        "encoding": {
-                            "x": {
-                                "field": "total",
-                                "type": "quantitative",
-                                "axis": {"title": "Total (h)"},
-                            },
-                            "y": {
-                                "field": "date",
-                                "type": "nominal",
-                                "axis": {"title": "Month", "grid": "true"},
-                            },
-                            "color": {
-                                "field": "cost_center_id",
-                                "type": "nominal",
-                                "scale": {
-                                    "domain": color_domain_bar,
-                                    "range": color_range_bar,
-                                },
-                                "legend": {
-                                    "labelFontSize": 12,
-                                },
-                            },
-                        },
-                        "padding": {"top": 20, "bottom": 20, "left": 20, "right": 20},
-                        "config": {
-                            "legend": {
-                                "orient": "right",
-                                "layout": {"right": {"anchor": "middle"}},
-                            }
-                        },
-                    },
-                    use_container_width=True,
-                )
-
-                st.vega_lite_chart(
                     df_grouped_pie,
                     {
                         "transform": [
@@ -199,9 +149,9 @@ for i, v in enumerate([v1, v2]):
                             },
                         ],
                         "width": "container",
-                        "height": 400,
+                        "height": 350,
                         "title": {
-                            "text": f"{pers_list[width * n + i]} - OVERALL BREAKDOWN",
+                            "text": f"{person_name} - OVERALL BREAKDOWN",
                             "offset": 20,
                             "fontSize": "16",
                             "anchor": "start",
@@ -239,5 +189,62 @@ for i, v in enumerate([v1, v2]):
                     use_container_width=True,
                 )
 
+                with st.expander(f"{person_name} - Monthly Breakdown"):
+                    st.vega_lite_chart(
+                        df_grouped_bar,
+                        {
+                            "width": "container",
+                            "height": {"step": 25},
+                            "title": {
+                                "text": person_name,
+                                "offset": 15,
+                                "fontSize": "16",
+                                "anchor": "start",
+                            },
+                            "mark": {
+                                "type": "bar",
+                                "stroke": "#fff",
+                                "tooltip": {
+                                    "signal": "{'Total (h)': round(datum.total), 'Project': datum.cost_center}"
+                                },
+                            },
+                            "encoding": {
+                                "x": {
+                                    "field": "total",
+                                    "type": "quantitative",
+                                    "axis": {"title": "Total (h)"},
+                                },
+                                "y": {
+                                    "field": "date",
+                                    "type": "nominal",
+                                    "axis": {"title": "Month", "grid": "true"},
+                                },
+                                "color": {
+                                    "field": "cost_center_id",
+                                    "type": "nominal",
+                                    "scale": {
+                                        "domain": color_domain_bar,
+                                        "range": color_range_bar,
+                                    },
+                                    "legend": {
+                                        "labelFontSize": 12,
+                                    },
+                                },
+                            },
+                            "padding": {
+                                "top": 20,
+                                "bottom": 20,
+                                "left": 20,
+                                "right": 20,
+                            },
+                            "config": {
+                                "legend": {
+                                    "orient": "right",
+                                    "layout": {"right": {"anchor": "middle"}},
+                                }
+                            },
+                        },
+                        use_container_width=True,
+                    )
         except IndexError:
             pass

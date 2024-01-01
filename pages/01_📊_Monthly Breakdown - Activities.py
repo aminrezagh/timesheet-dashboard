@@ -119,72 +119,17 @@ for i, v in enumerate([v1, v2]):
     with v:
         try:
             for n in range(height):
-                # chart-01
-                st.vega_lite_chart(
-                    df[
-                        df["pers_name"].isin([pers_list[width * n + i]])
-                        & ~df["date"].isin(st.session_state["ss_month_range"])
-                        & ~df["cost_center"].isin(st.session_state["ss_prj_range"])
-                        & ~df["activity_type"].isin(st.session_state["ss_act_range"])
-                    ]
-                    .groupby(["date", "activity_type"])
-                    .sum()
-                    .reset_index(),
-                    {
-                        "width": "container",
-                        "height": {"step": 25},
-                        "title": {
-                            "text": pers_list[width * n + i],
-                            "offset": 15,
-                            "fontSize": "16",
-                            "anchor": "start",
-                        },
-                        "mark": {
-                            "type": "bar",
-                            "stroke": "#fff",
-                            "tooltip": {
-                                "signal": "{'Total (h)': round(datum.total), 'Activity': datum.activity_type, 'Month': datum.date}"
-                            },
-                        },
-                        "encoding": {
-                            "x": {
-                                "field": "total",
-                                "type": "quantitative",
-                                "axis": {"title": "Total (h)"},
-                            },
-                            "y": {
-                                "field": "date",
-                                "type": "nominal",
-                                "axis": {"title": "Month", "grid": "true"},
-                            },
-                            "color": {
-                                "field": "activity_type",
-                                "type": "nominal",
-                                "scale": {"domain": dom, "range": rng},
-                            },
-                        },
-                        "padding": {"top": 20, "bottom": 20, "left": 20, "right": 20},
-                        "config": {
-                            "legend": {
-                                "orient": "right",
-                                "layout": {"right": {"anchor": "middle"}},
-                            }
-                        },
-                    },
-                    use_container_width=True,
-                )
+                person_name = pers_list[width * n + i]
 
-                # chart-02
+                df_filtered = df[
+                    df["pers_name"].isin([person_name])
+                    & ~df["date"].isin(st.session_state["ss_month_range"])
+                    & ~df["activity_type"].isin(st.session_state["ss_act_range"])
+                    & ~df["cost_center"].isin(st.session_state["ss_prj_range"])
+                ]
+
                 st.vega_lite_chart(
-                    df[
-                        df["pers_name"].isin([pers_list[width * n + i]])
-                        & ~df["date"].isin(st.session_state["ss_month_range"])
-                        & ~df["cost_center"].isin(st.session_state["ss_prj_range"])
-                        & ~df["activity_type"].isin(st.session_state["ss_act_range"])
-                    ]
-                    .groupby(["activity_type"])
-                    .sum()
-                    .reset_index(),
+                    df_filtered.groupby(["activity_type"]).sum().reset_index(),
                     {
                         "transform": [
                             {
@@ -200,7 +145,7 @@ for i, v in enumerate([v1, v2]):
                         "width": "container",
                         "height": 350,
                         "title": {
-                            "text": f"{pers_list[width * n + i]} - OVERALL BREAKDOWN",
+                            "text": f"{person_name} - OVERALL BREAKDOWN",
                             "offset": 20,
                             "fontSize": "16",
                             "anchor": "start",
@@ -232,6 +177,60 @@ for i, v in enumerate([v1, v2]):
                     },
                     use_container_width=True,
                 )
+
+                with st.expander(f"{person_name} - Monthly Breakdown"):
+                    st.vega_lite_chart(
+                        df_filtered.groupby(["date", "activity_type"])
+                        .sum()
+                        .reset_index(),
+                        {
+                            "width": "container",
+                            "height": {"step": 25},
+                            "title": {
+                                "text": person_name,
+                                "offset": 15,
+                                "fontSize": "16",
+                                "anchor": "start",
+                            },
+                            "mark": {
+                                "type": "bar",
+                                "stroke": "#fff",
+                                "tooltip": {
+                                    "signal": "{'Total (h)': round(datum.total), 'Activity': datum.activity_type, 'Month': datum.date}"
+                                },
+                            },
+                            "encoding": {
+                                "x": {
+                                    "field": "total",
+                                    "type": "quantitative",
+                                    "axis": {"title": "Total (h)"},
+                                },
+                                "y": {
+                                    "field": "date",
+                                    "type": "nominal",
+                                    "axis": {"title": "Month", "grid": "true"},
+                                },
+                                "color": {
+                                    "field": "activity_type",
+                                    "type": "nominal",
+                                    "scale": {"domain": dom, "range": rng},
+                                },
+                            },
+                            "padding": {
+                                "top": 20,
+                                "bottom": 20,
+                                "left": 20,
+                                "right": 20,
+                            },
+                            "config": {
+                                "legend": {
+                                    "orient": "right",
+                                    "layout": {"right": {"anchor": "middle"}},
+                                }
+                            },
+                        },
+                        use_container_width=True,
+                    )
 
         except IndexError:
             pass
