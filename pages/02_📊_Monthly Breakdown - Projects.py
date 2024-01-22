@@ -1,6 +1,6 @@
 import streamlit as st
 
-st.set_page_config(page_icon="📊,,,,,,,," ,layout="wide", page_title="Package Man-Hour")
+st.set_page_config(page_icon="📊,,,,,,,,," ,layout="wide", page_title="Package Man-Hour")
 
 PAGE_STYLE = """
             <style>
@@ -115,13 +115,13 @@ for i, v in enumerate([v1, v2]):
                 # Group and reset index for bar chart
                 df_grouped_bar = (
                     df_filtered.groupby(["date", "cost_center_id", "cost_center"])
-                    .sum()
+                    .sum(numeric_only=True)
                     .reset_index()
                 )
                 # Group and reset index for pie chart
                 df_grouped_pie = (
                     df_filtered.groupby(["cost_center", "cost_center_id"])
-                    .sum()
+                    .sum(numeric_only=True)
                     .reset_index()
                 )
 

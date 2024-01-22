@@ -1,6 +1,6 @@
 import streamlit as st
+import numpy as np
 import pandas as pd
-from pytimeparse.timeparse import timeparse
 import distinctipy
 
 st.set_page_config(page_icon="📊", layout="wide", page_title="Package Man-Hour")
@@ -61,17 +61,30 @@ pckg_pers_id = [
 
 
 def clean_and_categorize(df: pd.DataFrame):
-    # renames the columns
+    # Renames the columns
     df.rename(columns=dict(zip(default_names, new_names)), inplace=True)
     df = df[df["pers_id"].isin(pckg_pers_id)]
-    df.drop("pers_id", axis=1, inplace=True)
 
-    # converts time-format to number of hours
+    # Drop the columns
+    df.drop(["pers_id", "discipline", "discipline_code"], axis=1, inplace=True)
+
+    # Vectorized time conversion function
+    def convert_time_to_hours(time_str):
+        if not isinstance(time_str, str):
+            return 0
+        parts = time_str.split(":")
+        hours = int(parts[0]) + int(parts[1]) / 60
+        if len(parts) == 3:
+            hours += int(parts[2]) / 3600
+        return hours
+
+    vectorized_convert_time_to_hours = np.vectorize(convert_time_to_hours)
+
+    # Converts time-format to number of hours (vectorized)
     time_cols = ["basic", "over_time", "mission", "homework"]
-    df[time_cols] = df[time_cols].applymap(
-        lambda t: timeparse(t, granularity="minutes") / 3600
+    df[time_cols] = df[time_cols].apply(
+        lambda col: vectorized_convert_time_to_hours(col)
     )
-    df.drop(["discipline", "discipline_code"], axis=1, inplace=True)
 
     # adds thursday column to dataframe
     df.loc[df["basic"] == 0, "thursday"] = df["over_time"]
@@ -237,7 +250,7 @@ try:
                 & ~df["activity_type"].isin(st.session_state["ss_act_range"])
             ]
             .groupby(["activity_type"])
-            .sum()
+            .sum(numeric_only=True)
             .reset_index(),
             {
                 "transform": [
@@ -295,7 +308,7 @@ try:
                 & ~df["activity_type"].isin(st.session_state["ss_act_range"])
             ]
             .groupby(["cost_center_id", "cost_center"])
-            .sum()
+            .sum(numeric_only=True)
             .reset_index(),
             {
                 "transform": [

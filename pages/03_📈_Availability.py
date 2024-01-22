@@ -23,27 +23,19 @@ st.markdown(
 # loads dataframe from session state
 df = st.session_state["dataframe"]
 
-# group columns on name and date
+# Group by name and date then sum
 gr = df.groupby(["pers_name", "date"]).sum().reset_index()
-gr["max_basic"] = gr["date"].map(
-    {
-        r[0]: r[1]
-        for r in df.groupby(["date", "pers_name"])
-        .sum()
-        .reset_index()
-        .groupby("date")
-        .agg({"total_basic": "max"})
-        .reset_index()
-        .to_dict("split")["data"]
-    }
-)
-gr["availability"] = gr["net_working"] / gr["max_basic"] * 100
-gr["over_time_pcnt"] = gr["over_time"] / gr["max_basic"] * 100
-sec_av = gr.groupby("date").mean().reset_index()
-gr["sec_av"] = gr["date"].map(
-    {r[0]: r[1] for r in sec_av[["date", "availability"]].to_dict("split")["data"]}
-)
 
+# Max basic and availability calculations
+max_basic = gr.groupby("date")["total_basic"].transform("max")
+gr["availability"] = gr["net_working"] / max_basic * 100
+gr["over_time_pcnt"] = gr["over_time"] / max_basic * 100
+
+# Secondary availability
+sec_av = gr.groupby("date")["availability"].mean()
+gr["sec_av"] = gr["date"].map(sec_av)
+
+# Unique sorted list of dates for multiselect
 month_range = sorted(df["date"].unique(), reverse=True)
 
 

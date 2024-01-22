@@ -1,5 +1,10 @@
 import streamlit as st
 
+from streamlit_profiler import Profiler
+
+p = Profiler()
+p.start()
+
 st.set_page_config(page_icon="📊", layout="wide", page_title="Package Man-Hour")
 
 PAGE_STYLE = """
@@ -100,10 +105,15 @@ for i, v in enumerate([v1, v2, v3]):
             for n in range(height):
                 st.vega_lite_chart(
                     df[~df["date"].isin(st.session_state["ss_month_range"])]
-                    .groupby(["cost_center_id", "cost_center", "activity_type"])
-                    .agg(percent=("total", "sum"))
-                    .groupby(level=0)
-                    .apply(lambda x: 100 * x / float(x.sum()))
+                    .assign(
+                        percentage=lambda x: (
+                            x["total"]
+                            / x.groupby(["cost_center_id"])["total"].transform("sum")
+                        )
+                        * 100
+                    )
+                    .groupby(["cost_center", "cost_center_id", "activity_type"])
+                    .agg(percent=("percentage", "sum"))
                     .reset_index()
                     .query("cost_center_id == @prj_ids[@width * @n + @i]"),
                     {
@@ -143,3 +153,5 @@ for i, v in enumerate([v1, v2, v3]):
 
         except IndexError:
             pass
+
+p.stop()

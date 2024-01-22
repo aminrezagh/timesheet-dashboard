@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 
 st.set_page_config(page_icon="📊", layout="wide", page_title="Package Man-Hour")
 
@@ -103,6 +104,8 @@ with st.sidebar:
 
 width, height = 3, len(acts) // 3 + 1
 
+df.to_csv("clean_df.csv", index=False)
+
 v1, b1, v2, b2, v3 = st.columns([7, 1, 7, 1, 7])
 for i, v in enumerate([v1, v2, v3]):
     with v:
@@ -113,10 +116,15 @@ for i, v in enumerate([v1, v2, v3]):
                         ~df["date"].isin(st.session_state["ss_month_range"])
                         & ~df["cost_center"].isin(st.session_state["ss_prj_range"])
                     ]
+                    .assign(
+                        percentage=lambda x: (
+                            x["total"]
+                            / x.groupby("pers_name")["total"].transform("sum")
+                        )
+                        * 100
+                    )
                     .groupby(["pers_name", "activity_type"])
-                    .agg(percent=("total", "sum"))
-                    .groupby(level=0)
-                    .apply(lambda x: 100 * x / float(x.sum()))
+                    .agg(percent=("percentage", "sum"))
                     .reset_index()
                     .query("activity_type == @acts[@width * @n + @i]"),
                     {
