@@ -104,8 +104,6 @@ with st.sidebar:
 
 width, height = 3, len(acts) // 3 + 1
 
-df.to_csv("clean_df.csv", index=False)
-
 v1, b1, v2, b2, v3 = st.columns([7, 1, 7, 1, 7])
 for i, v in enumerate([v1, v2, v3]):
     with v:
