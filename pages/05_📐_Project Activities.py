@@ -1,10 +1,5 @@
 import streamlit as st
 
-from streamlit_profiler import Profiler
-
-p = Profiler()
-p.start()
-
 st.set_page_config(page_icon="📊", layout="wide", page_title="Package Man-Hour")
 
 PAGE_STYLE = """
@@ -153,5 +148,3 @@ for i, v in enumerate([v1, v2, v3]):
 
         except IndexError:
             pass
-
-p.stop()
